@@ -1,7 +1,8 @@
 const http = require('http');
-const multipartser = require( 'multipartser' );
+const https = require('https');
+const multipartser = require('multipartser');
 const resolve = require('./response');
-const routes = require('./routes-array');
+const routes = require('./tools/routes-array');
 const WebSocket = require('ws');
 
 
@@ -9,7 +10,9 @@ var socket;
 var token;
 
 module.exports = class Semplice {
-    constructor(){
+    constructor(type = 'http', options = {}) {
+        this.typeServer = type;
+        this.optionSecure = options;
         this.server;
         this.wss;
         this.socket;
@@ -17,93 +20,103 @@ module.exports = class Semplice {
         token = this.token;
     }
 
-    onRequest(req,res){
-        const self = this;
-        
-        const { headers, method, url } = req;
+    onRequest(req, res) {
+
+        const {
+            headers,
+            method,
+            url
+        } = req;
 
         var body = {};
         var files = {};
         var parser;
         var boundary
 
-        let contentType = headers && headers[ 'content-type' ];
-        
+        const options = {
+            req:req,
+            res:res,
+            body:body, 
+            files:files, 
+            socket:socket, 
+            token:token, 
+            method:method
+        }
 
-        if ( ! contentType ) {
-            resolve(req,res,headers,method,url,body,files,socket,token);
+        let contentType = headers && headers['content-type'];
+
+
+        if (!contentType) {
+            resolve(options);
         } else {
-            let contentTypeParts = contentType.split( ';' );
+            let contentTypeParts = contentType.split(';');
 
-            if ( contentTypeParts.length != 2 ) {
-                resolve(req,res,headers,method,url,body,files,socket,token);
-            }
+            contentType = contentTypeParts[0];
+            boundary = contentTypeParts[1];
+            boundary = boundary.trim().split('=');
+            boundary = boundary[1];
 
-            contentType = contentTypeParts[ 0 ];
-    
-            if ( contentType != 'multipart/form-data' ) {
-                resolve(req,res,headers,method,url,body,files,socket,token);
-            }
+            parser = multipartser();
+            parser.boundary(boundary);
 
-            boundary = contentTypeParts[ 1 ];
-            boundary = boundary.trim().split( '=' );
-        
-            if ( boundary.length != 2 ) {
-                resolve(req,res,headers,method,url,body,files,socket,token);
-            }
-        
-            boundary = boundary[ 1 ];
+            parser.on('part', function (part) {
 
-            parser = multipartser(); 
-            parser.boundary( boundary );
-
-            parser.on( 'part', function ( part ) {
-                
-                if ( part.type == 'file' ) {
+                if (part.type == 'file') {
 
                     files[part.name] = {
-                        name:part.name,
-                        filename:part.filename,
-                        contentType:part.contentType,
-                        contents:part.contents,
+                        name: part.name,
+                        filename: part.filename,
+                        contentType: part.contentType,
+                        contents: part.contents,
                     }
-            
-                } else if ( part.type == 'field' ) {
+
+                } else if (part.type == 'field') {
 
                     body[part.name] = part.value;
-            
-                } 
-            
+
+                }
+
             });
 
-            parser.on( 'end', function () {
-                resolve(req,res,headers,method,url,body,files,socket,token);
+            parser.on('end', function () {
+                resolve(options);
             });
 
-            req.setEncoding( 'utf8' );
-            req.on( 'data', parser.data );
-            req.on( 'end', parser.end );
-    
-            parser.on( 'error', function ( error ) {
-                console.error( error );
-            });        
-        }        
+            req.setEncoding('utf8');
+            req.on('data', parser.data);
+            req.on('end', parser.end);
+
+            parser.on('error', function (error) {
+                console.error(error);
+            });
+        }
     }
 
-    setToken(tkn){
+    setToken(tkn) {
         token = tkn;
     }
 
-    addRoute(route){
+    addRoute(route) {
         routes.push(route);
     }
 
-    createServer(){
-        var self = this;
-        this.server = http.createServer(this.onRequest);
+    createServer() {
+
+        switch (this.typeServer) {
+            case 'http':
+                this.server = http.createServer(this.onRequest);
+                break;
+            case 'https':
+                https.createServer(this.optionSecure, this.onRequest);
+                break;
+        }
+
+
         var server = this.server;
-        const wss = new WebSocket.Server({ server });
- 
+        const wss = new WebSocket.Server({
+            server
+        });
+
         wss.on('connection', function connection(ws) {
             ws.on('message', function incoming(message) {
                 console.log('received: %s', message);
@@ -112,17 +125,12 @@ module.exports = class Semplice {
         });
     }
 
-    listen(port,callback){
-        try {            
+    listen(port, callback) {
+        try {
             this.createServer();
-            this.server.listen(port,callback);
+            this.server.listen(port, callback);
         } catch (error) {
             callback(error);
         }
     }
-
-    tokenRandom(min, max) {
-        return Math.floor(Math.random() * (max - min)) + min;
-    }
-}
-
+};

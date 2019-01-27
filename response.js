@@ -1,116 +1,129 @@
 const urls = require('url');
-const parse_query_string = require('./query_params');
-const routes = require('./routes-array');
-const NodeMailer = require('nodemailer');
-const smtpTransport = require('nodemailer-smtp-transport');
-const jwt = require('jwt-simple');
+const parse_query_string = require('./tools/query_params');
 const path = require('path');
 const fs = require('fs');
-const map = require('./mimeTypes');
-const extType = type => map.find(e => e.ext === type );
+const map = require('./tools/mimeTypes');
+const tools = require('./tools/tools');
+const router = require('./router');
+const extType = type => map.find(e => e.ext === type);
 
 
-module.exports = function (req,res,headers,method,url,body,files,wss,tkn){
 
-    tkn = tkn.toString();
-    url = url.split('?');
+module.exports = function (obj) {
+    exports.tkn = obj.token.toString();
+
+    url = obj.req.url.split('?');
     let origin = url[0];
 
-    
-
-    res['json'] = data => res.write(JSON.stringify(data));
-    res['status'] = data => res.statusCode = data;
-    res['ws'] = data => wss == undefined || null ? 'not connection' : wss.send(data);
-    res['sendEmail'] = (data,mailOptions,callback) => {
-        var transport = NodeMailer.createTransport(smtpTransport(data));
-        return transport.sendMail(mailOptions, callback);
+    obj.res['json'] = data => obj.res.write(JSON.stringify(data));
+    obj.res['status'] = data => obj.res.statusCode = data;
+    obj.res['socket'] = data => obj.socket == undefined || null ? 'not connection' : obj.socket.send(data);
+    obj.res['send'] = (status, data, msg = '') => {
+        obj.res.writeHead(status, headersBasic());
+        obj.res.write(JSON.stringify(data));
+        obj.socket == undefined || null ? 'not connection' : obj.socket.send(msg);
+        obj.res.end();
     }
 
+    obj.req['headers'] = obj.req.headers;
+    obj.req['body'] = obj.body;
+    obj.req['files'] = obj.files;
 
-    res['send'] = (status,data,msg = '') => {
-        res.writeHead(status, { 
-            'Access-Control-Allow-Origin':'*',
-            'Access-Control-Allow-Headers':'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method',
-            'Access-Control-Allow-Methods':'GET, POST, OPTIONS, PUT, DELETE',
-            'Allow':'GET, POST, OPTIONS, PUT, DELETE',
-            'Content-Type':'application/json',
-            'X-Powered-By': 'SempliceJS'
-        });
-        res.statusCode = status;
-        res.write(JSON.stringify(data));
-        wss == undefined || null ? 'not connection' : wss.send(msg);
-        res.end();
-    }
+    obj['origin'] = origin;
+    obj['token'] = obj.token.toString();
 
-    res['generateToken'] = user => {
-        let payload = {
-            sub:user._id,
-            username:user.name
-        }
+    router(obj, function(route){
+        route = route.obj;
+        let msgError = 'Route api not found'
 
-        return jwt.encode(payload,tkn);
-    }
+        obj.req['params'] = route.params;
+        obj.req['queryParams'] = query(url[1]);
 
-    req['headers'] = headers;
-    req['body'] = body;
-    req['files'] = files;
+        if (route == undefined || route == null) {
+            const sanitizePath = path.normalize(obj.req.url).replace(/^(\.\.[\/\\])+/, '');
+            let pathname = path.join(path.resolve(), sanitizePath);
 
-    let route = routes.find(e => {
+            let ext = path.parse(pathname).ext.split('.')[1];
+            let objExt = extType(ext) == null ? {
+                ext: null,
+                content: null
+            } : extType(ext);
+            let regexExt = "\." + objExt.ext + "$";
 
-        e.method = e.method == null ? 'GET' : e.method;
+            if (obj.req.url.match(regexExt)) {
+                var imagePath = path.join(path.resolve(), 'public', obj.req.url);
+                fs.exists(imagePath, function (exist) {
+                    if (exist) {
+                        var fileStream = fs.createReadStream(imagePath);
+                        obj.res.writeHead(200, {
+                            "Content-Type": objExt.content
+                        });
+                        fileStream.pipe(obj.res);
+                    } else {
+                        obj.res.send(404, {
+                            Error: msgError
+                        });
+                    }
+                })
 
-        if(e.path === origin && e.method.toLowerCase() === method.toLowerCase()){
-            var query_string = url[1] == undefined || null ? '' : url[1];
-            var parsed_qs = parse_query_string(query_string);
-            req['params'] = parsed_qs;
-            return e;
-        } 
-        
-    });
-    
-    let msgError = 'Route api not found'
-
-    if(route == undefined || route == null){
-        const sanitizePath = path.normalize(req.url).replace(/^(\.\.[\/\\])+/, '');
-        let pathname = path.join(path.resolve(),sanitizePath);
-          
-          let ext = path.parse(pathname).ext.split('.')[1];
-          let objExt = extType(ext) == null ? {ext:null,content:null} : extType(ext);
-          let regexExt = "\." + objExt.ext + "$";
-
-        if(req.url.match(regexExt)){    
-            var imagePath = path.join(path.resolve(), 'public', req.url);
-            fs.exists(imagePath, function (exist) {
-                if(exist){
-                    var fileStream = fs.createReadStream(imagePath);
-                    res.writeHead(200, {"Content-Type":objExt.content});
-                    fileStream.pipe(res);
-                } else {
-                    res.send(500,{Error:msgError});        
-                }
-            })
-            
+            } else {
+                obj.res.send(400, {
+                    Error: msgError
+                });
+            }
         } else {
-            res.send(500,{Error:msgError});
-        }
-    } else {
-        if(route.auth){
-            
-            if (!req.headers.authorization) {
-                return res.send(403,{Error: 'Authentication Error'});
+            if (route.auth) {
+
+                if (!obj.req.headers.authorization) {
+                    return obj.res.send(403, {
+                        Error: 'Authentication Error'
+                    });
+                }
+
+                var tokens = obj.req.headers.authorization.split(" ")[1];
+                var payload = jwt.decode(tokens, obj.token);
+                obj.req['user'] = payload.sub;
+
+                route.controller(obj.req, obj.res, tools);
+
+            } else {
+
+                route.controller(obj.req,obj.res, tools);
+
             }
 
-            var tokens = req.headers.authorization.split(" ")[1];
-            var payload = jwt.decode(tokens,tkn);
-            req['user'] = payload.sub;
-
-            route.controller(req,res);
-
-        } else {
-
-            route.controller(req,res);           
-
         }
-        
+
+
+    });
+
+    // router(obj).then(w => console.log('w ->',w))
+
+
+    // var route = {
+    //     path:'/',
+    //     auth:false,
+    //     method:'POST',
+    //     controller: (req,res,utils) => {
+    //         res.send(200,{message:'holamundo'},'');
+    //     }
+    // }
+}
+
+
+function query(url) {
+    var query_string = url == undefined || null ? '' : url;
+    var parsed_qs = parse_query_string(query_string);
+    return parsed_qs;
+}
+
+function headersBasic() {
+    return {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, DELETE',
+        'Allow': 'GET, POST, OPTIONS, PUT, DELETE',
+        'Content-Type': 'application/json',
+        'X-Powered-By': 'SempliceJS'
     }
 }
