@@ -3,7 +3,6 @@ const https = require('https');
 const multipartser = require('multipartser');
 const resolve = require('./response');
 const routes = require('./tools/routes-array');
-// const WebSocket = require('ws');
 const WebSocket = require('./websocket');
 
 var socket;
@@ -51,7 +50,6 @@ module.exports = class Semplice {
             resolve(options);
         } else {
             let contentTypeParts = contentType.split(';');
-            
             contentType = contentTypeParts[0];
             boundary = contentTypeParts[1];
             boundary = boundary.trim().split('=');
