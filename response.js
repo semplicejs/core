@@ -105,18 +105,6 @@ module.exports = function (obj) {
 
 
     });
-
-    // router(obj).then(w => console.log('w ->',w))
-
-
-    // var route = {
-    //     path:'/',
-    //     auth:false,
-    //     method:'POST',
-    //     controller: (req,res,utils) => {
-    //         res.send(200,{message:'holamundo'},'');
-    //     }
-    // }
 }
 
 

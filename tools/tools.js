@@ -15,7 +15,7 @@ module.exports = {
         return jwt.encode(payload,Response.tkn);
     },
 
-    uploadFile: (obj,name,folder) =>{
+    fileUpload: (obj,name,folder) =>{
         let date = new Date();
         let nombre_nuevo = name + date.getDate() + date.getSeconds() + date.getMilliseconds()+ "_file";
         let ruta_archivo = obj.path;
