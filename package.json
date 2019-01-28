@@ -5,7 +5,10 @@
   "main": "semplice.js",
   "author": "Luis Vilches",
   "license": "ISC",
-  "repository": "https://github.com/semplcicejs/semplice.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/semplicejs/core.git"
+  },
   "dependencies": {
     "jwt-simple": "^0.5.5",
     "multipartser": "^1.0.5",
