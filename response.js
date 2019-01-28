@@ -6,8 +6,7 @@ const map = require('./tools/mimeTypes');
 const tools = require('./tools/tools');
 const router = require('./router');
 const extType = type => map.find(e => e.ext === type);
-
-
+const Semplice = require('./semplice');
 
 module.exports = function (obj) {
     exports.tkn = obj.token.toString();
@@ -17,11 +16,21 @@ module.exports = function (obj) {
 
     obj.res['json'] = data => obj.res.write(JSON.stringify(data));
     obj.res['status'] = data => obj.res.statusCode = data;
-    obj.res['socket'] = data => obj.socket == undefined || null ? 'not connection' : obj.socket.send(data);
+    obj.res['socket'] = (event = '',data = {}) => {
+        data['event'] = event;
+        Semplice.ws.send(data);
+    };
     obj.res['send'] = (status, data, msg = '') => {
+
         obj.res.writeHead(status, headersBasic());
         obj.res.write(JSON.stringify(data));
-        obj.socket == undefined || null ? 'not connection' : obj.socket.send(msg);
+
+        if(typeof msg === 'string'){
+            Semplice.ws.send({event:msg});
+        } else if(typeof msg === 'object'){
+            Semplice.ws.send(msg);
+        }
+
         obj.res.end();
     }
 

@@ -3,8 +3,8 @@ const https = require('https');
 const multipartser = require('multipartser');
 const resolve = require('./response');
 const routes = require('./tools/routes-array');
-const WebSocket = require('ws');
-
+// const WebSocket = require('ws');
+const WebSocket = require('./websocket');
 
 var socket;
 var token;
@@ -18,6 +18,7 @@ module.exports = class Semplice {
         this.socket;
         this.token = 'jbfbsdkfbasfquwbefjdsbf';
         token = this.token;
+        this.eventsWS = [];
     }
 
     onRequest(req, res) {
@@ -34,13 +35,13 @@ module.exports = class Semplice {
         var boundary
 
         const options = {
-            req:req,
-            res:res,
-            body:body, 
-            files:files, 
-            socket:socket, 
-            token:token, 
-            method:method
+            req: req,
+            res: res,
+            body: body,
+            files: files,
+            socket: socket,
+            token: token,
+            method: method
         }
 
         let contentType = headers && headers['content-type'];
@@ -50,7 +51,7 @@ module.exports = class Semplice {
             resolve(options);
         } else {
             let contentTypeParts = contentType.split(';');
-
+            
             contentType = contentTypeParts[0];
             boundary = contentTypeParts[1];
             boundary = boundary.trim().split('=');
@@ -100,6 +101,10 @@ module.exports = class Semplice {
         routes.push(route);
     }
 
+    addEventWS(event){
+        this.eventsWS.push(event);
+    }
+
     createServer() {
 
         switch (this.typeServer) {
@@ -107,22 +112,11 @@ module.exports = class Semplice {
                 this.server = http.createServer(this.onRequest);
                 break;
             case 'https':
-                https.createServer(this.optionSecure, this.onRequest);
+                this.server = https.createServer(this.optionSecure, this.onRequest);
                 break;
         }
 
-
-        var server = this.server;
-        const wss = new WebSocket.Server({
-            server
-        });
-
-        wss.on('connection', function connection(ws) {
-            ws.on('message', function incoming(message) {
-                console.log('received: %s', message);
-            });
-            socket = ws;
-        });
+        exports.ws = new WebSocket(this.server,this.eventsWS);
     }
 
     listen(port, callback) {
@@ -134,3 +128,6 @@ module.exports = class Semplice {
         }
     }
 };
+
+
+
