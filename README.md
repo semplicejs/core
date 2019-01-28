@@ -50,18 +50,20 @@ const routes = [
     },
 ];
 
-// We create an array of events that will be executed when data is sent by WebSockets
+// We create an array of events that will be executed 
+// when data is sent by WebSockets
 const events = [
 	{
         name:'send',
         controller:function(ws,data){
             console.log('data received -> ', data );
-            ws.send({ event:'send', data: { name:'luis' } });
+            ws.send({ event:'received', data: { message: 'success' } });
         }
     }
 ];
-
+//We go through the array of routes and add them
 routes.map(e => server.addRoute(e));
+//We go through the array of events and add them
 events.forEach(e => server.addEventWS(e));
 
 server.listen(3000, (err) => {
@@ -76,16 +78,16 @@ server.listen(3000, (err) => {
 ###General methods
                     
 | Function name | Description                    | type
-| ------------- | ------------------------------ |
+| ------------- | ------------------------------ | --------------------------------- |
 | `addRoute(route)`      | Add a new route.       | Function
 | `addEventWS(event)`   | Add a new event websocket    | Function
 | `listen(port,callback)`   | Initialize the server in the indicated port    | Function
 
 ###Methods for routes
 
-#### req
+#### Req
 | Property name | Description                    | type
-| ------------- | ------------------------------ |
+| ------------- | ------------------------------ | --------------------------------- |
 | `req.headers`      | Returns the headers of the request.       | Object
 | `req.body`   | Returns an object with the data sent by the POST method    | Object
 | `req.files`   | Returns an object with the files sent by the POST method    | Object
@@ -93,19 +95,20 @@ server.listen(3000, (err) => {
 | `req.queryParams`   | Returns an object with the parameters that are sent in the url (query params)    | Object
 
 
-#### res
+#### Res
 | Function name | Description                    | type
-| ------------- | ------------------------------ |
+| ------------- | ------------------------------ | --------------------------------- |
 | `res.send(status,data,websocket)`      |  Method that sends a complete answer, with a status code (mandatory), an object with the data to send and an object websocket (alternative)   | Function
 | `res.status(code)`   | Send a status code    | Function
 | `res.json(data)`   | Send a response in JSON format    | Function
 | `res.socket(event,data)`   | Send data through websocket, receive two parameters the first is the name of the event and the second the data to send.   | Function
 
-#### utils
+#### Utils
 | Function name | Description                    | type
-| ------------- | ------------------------------ |
+| ------------- | ------------------------------ | --------------------------------- |
 | `generateToken(user)`      | Generate a new authentication token with JWT  | Function
 | `fileUpload(file,name,folder)`   | It allows to upload a file to the server and returns the url to save it in the database  | Function
 | `generateUIAvatar(name,size)`   | Generate a new user avatar through the api of ui-avatars.com and return the url to save in the database  | Function
 | `sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
+
 
