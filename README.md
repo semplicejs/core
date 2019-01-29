@@ -80,7 +80,7 @@ server.listen(3000, (err) => {
 | Function name | Description                    | type
 | ------------- | ------------------------------ | --------------------------------- |
 | `addRoute(route)`      | Add a new route.       | Function
-| `addEventWS(event)`   | Add a new event websocket    | Function
+| `addSocket(event)`   | Add a new event websocket    | Function
 | `listen(port,callback)`   | Initialize the server in the indicated port    | Function
 
 ###Methods for routes
@@ -112,3 +112,8 @@ server.listen(3000, (err) => {
 | `sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
 
 
+
+###Methods Websockets events
+| Function name | Description                    | type
+| ------------- | ------------------------------ | --------------------------------- |
+| `ws.send(event,data)` | sends data through websocket passing as parameters the event to ejecura in the front and the data to send  | Function
