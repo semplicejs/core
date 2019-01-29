@@ -116,4 +116,9 @@ server.listen(3000, (err) => {
 ###Methods Websockets events
 | Function name | Description                    | type
 | ------------- | ------------------------------ | --------------------------------- |
-| `ws.send(event,data)` | sends data through websocket passing as parameters the event to ejecura in the front and the data to send  | Function
+| `ws.send(event,data)`      | sends data through websocket passing as parameters the event to ejecura in the front and the data to send  | Function
+| `ws.getIp()`      | returns the client's ip  | Function
+| `ws.getHeaders()`      | returns headers  | Function
+| `ws.getCookies()`      | returns all cookies  | Function
+| `ws.getCookie(name)`       | returns a specific cookie  | Function
+
