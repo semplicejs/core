@@ -1,7 +1,7 @@
 {
   "name": "semplice",
-  "version": "0.0.16",
-  "description": "",
+  "version": "0.0.17",
+  "description": "A micro framework for NodeJS",
   "main": "semplice.js",
   "author": "Luis Vilches",
   "license": "ISC",
@@ -14,7 +14,6 @@
     "multipartser": "^1.0.5",
     "nodemailer": "^5.1.1",
     "nodemailer-smtp-transport": "^2.7.4",
-    "path-to-regexp": "^3.0.0",
     "ws": "^6.1.2"
   }
 }

@@ -1,6 +1,4 @@
 const routes = require('./tools/routes-array');
-const pathToRegexp = require('path-to-regexp')
-
 
 module.exports = function router(obj,cb){
     var arr = [];

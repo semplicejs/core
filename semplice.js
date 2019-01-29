@@ -99,7 +99,7 @@ module.exports = class Semplice {
         routes.push(route);
     }
 
-    addEventWS(event){
+    addSocket(event){
         this.eventsWS.push(event);
     }
 

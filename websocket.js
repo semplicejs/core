@@ -30,6 +30,7 @@ class WSS {
                 message = JSON.parse(message);
                 self.events.forEach(event => {
                     if(message.data.event == event.name){
+                        ws['send'] = data => ws.send(JSON.stringify(data));
                         event.controller(ws,message.data);
                     }
                 })
