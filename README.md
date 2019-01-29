@@ -106,10 +106,10 @@ server.listen(3000, (err) => {
 #### Utils
 | Function name | Description                    | type
 | ------------- | ------------------------------ | --------------------------------- |
-| `generateToken(user)`      | Generate a new authentication token with JWT  | Function
-| `fileUpload(file,name,folder)`   | It allows to upload a file to the server and returns the url to save it in the database  | Function
-| `generateUIAvatar(name,size)`   | Generate a new user avatar through the api of ui-avatars.com and return the url to save in the database  | Function
-| `sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
+| `utils.generateToken(user)`      | Generate a new authentication token with JWT  | Function
+| `utils.fileUpload(file,name,folder)`   | It allows to upload a file to the server and returns the url to save it in the database  | Function
+| `utils.generateUIAvatar(name,size)`   | Generate a new user avatar through the api of ui-avatars.com and return the url to save in the database  | Function
+| `utils.sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
 
 
 

@@ -1,6 +1,6 @@
 {
   "name": "semplice",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "A micro framework for NodeJS",
   "main": "semplice.js",
   "author": "Luis Vilches",
