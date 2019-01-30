@@ -52,19 +52,19 @@ const routes = [
 
 // We create an array of events that will be executed 
 // when data is sent by WebSockets
-const events = [
+const sockets = [
 	{
         name:'send',
         controller:function(ws,data){
             console.log('data received -> ', data );
-            ws.send({ event:'received', data: { message: 'success' } });
+            ws.send('received', { message: 'success' });
         }
     }
 ];
 //We go through the array of routes and add them
 routes.map(e => server.addRoute(e));
 //We go through the array of events and add them
-events.forEach(e => server.addEventWS(e));
+events.forEach(e => server.addSocket(e));
 
 server.listen(3000, (err) => {
     if(err){console.log('error',err)}
@@ -103,22 +103,24 @@ server.listen(3000, (err) => {
 | `res.json(data)`   | Send a response in JSON format    | Function
 | `res.socket(event,data)`   | Send data through websocket, receive two parameters the first is the name of the event and the second the data to send.   | Function
 
-#### Utils
-| Function name | Description                    | type
-| ------------- | ------------------------------ | --------------------------------- |
-| `utils.generateToken(user)`      | Generate a new authentication token with JWT  | Function
-| `utils.fileUpload(file,name,folder)`   | It allows to upload a file to the server and returns the url to save it in the database  | Function
-| `utils.generateUIAvatar(name,size)`   | Generate a new user avatar through the api of ui-avatars.com and return the url to save in the database  | Function
-| `utils.sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
-
-
 
 ###Methods Websockets events
 | Function name | Description                    | type
 | ------------- | ------------------------------ | --------------------------------- |
+| `ws.getId()`      | returns the customer id  | Function
 | `ws.send(event,data)`      | sends data through websocket passing as parameters the event to ejecura in the front and the data to send  | Function
+| `ws.sendAllClients(event,data)`      | send an event with data to all connected clients  | Function
 | `ws.getIp()`      | returns the client's ip  | Function
-| `ws.getHeaders()`      | returns headers  | Function
-| `ws.getCookies()`      | returns all cookies  | Function
-| `ws.getCookie(name)`       | returns a specific cookie  | Function
+| `ws.getClients()`       | returns all clients  | Function
+| `ws.getHeaders()`       | returns headers  | Function
+| `ws.getCookies()`       | returns all cookies  | Function
+| `ws.getCookie(name)`       | returns cookie for name  | Function
 
+
+#### Utils (API and Websocket)
+| Function name | Description                    | type
+| ------------- | ------------------------------ | --------------------------------- |
+| `utils.generateToken(user)`      | Generate a new authentication token with JWT  | Function
+| `utils.fileUpload(file,name,folder)`   | It allows to upload a file to the server and returns the url to save it in the database  | Function
+| `utils.generateUIAvatar(name,size)`  | Generate a new user avatar through the api of ui-avatars.com and return the url to save in the database  | Function
+| `utils.sendMail(smtpOptions,mailOption,callback)`   | Send emails  | Function
